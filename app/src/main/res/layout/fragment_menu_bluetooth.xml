@@ -11,7 +11,9 @@
         android:layout_marginLeft="48dp"
         android:layout_marginTop="24dp"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        />
 
     <Button
         android:text="Enable Discoverable"
@@ -20,6 +22,7 @@
         android:id="@+id/buttonDiscoverAbility"
         android:layout_below="@+id/toggleButton"
         android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
         android:layout_marginTop="24dp" />
 
     <Button
@@ -29,7 +32,9 @@
         android:id="@+id/buttonDiscover"
         android:layout_marginTop="24dp"
         android:layout_below="@+id/buttonDiscoverAbility"
-        android:layout_alignStart="@+id/toggleButton" />
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        />
 
     <ListView
         android:layout_width="match_parent"
