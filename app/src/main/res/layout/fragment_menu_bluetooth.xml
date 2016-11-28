@@ -8,4 +8,13 @@
         android:layout_height="wrap_content"
         android:id="@+id/textView2"
         android:textAppearance="@style/TextAppearance.AppCompat.Display2" />
+
+    <ToggleButton
+        android:text="ToggleButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/toggleButton"
+        android:layout_below="@+id/textView2"
+        android:layout_centerHorizontal="true"
+        android:checked="false" />
 </RelativeLayout>
