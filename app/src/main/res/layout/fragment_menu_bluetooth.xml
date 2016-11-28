@@ -2,19 +2,41 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent">
 
-    <TextView
-        android:text="Bluetooth Fragment"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/textView2"
-        android:textAppearance="@style/TextAppearance.AppCompat.Display2" />
-
     <ToggleButton
         android:text="ToggleButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/toggleButton"
-        android:layout_below="@+id/textView2"
+        android:checked="false"
+        android:layout_marginLeft="48dp"
+        android:layout_marginTop="24dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:text="Enable Discoverable"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonDiscoverAbility"
+        android:layout_below="@+id/toggleButton"
         android:layout_centerHorizontal="true"
-        android:checked="false" />
+        android:layout_marginTop="24dp" />
+
+    <Button
+        android:text="Discover"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/buttonDiscover"
+        android:layout_marginTop="24dp"
+        android:layout_below="@+id/buttonDiscoverAbility"
+        android:layout_alignStart="@+id/toggleButton" />
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/buttonDiscover"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:id="@+id/lvNewDevices"/>
+
 </RelativeLayout>

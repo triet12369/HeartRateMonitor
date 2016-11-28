@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         //default menu selection
-        displaySelectedScreen(R.id.nav_about);
+        displaySelectedScreen(R.id.nav_bluetooth);
     }
 
     @Override
