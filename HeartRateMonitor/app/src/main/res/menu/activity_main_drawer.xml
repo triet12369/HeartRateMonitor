@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_bluetooth"
+            android:icon="@drawable/ic_menu_bluetooth"
+            android:title="Bluetooth Devices" />
+        <item
+            android:id="@+id/nav_monitor"
+            android:icon="@drawable/ic_menu_monitor"
+            android:title="Monitor" />
+    </group>
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_about"
+            android:icon="@drawable/ic_menu_about"
+            android:title="About" />
+    </group>
+
+</menu>
