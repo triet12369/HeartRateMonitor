@@ -25,5 +25,4 @@ public class MonitorFragment extends Fragment {
         //you can set the title for your toolbar here for different fragments different titles
         getActivity().setTitle("Heart Rate Monitor");
     }
-
 }

@@ -8,14 +8,14 @@ import android.view.View;
 import android.view.ViewGroup;
 
 
-public class MonitorFragment extends Fragment {
+public class AboutFragment extends Fragment {
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         //returning our layout file
         //change R.layout.yourlayoutfilename for each of your fragments
-        return inflater.inflate(R.layout.fragment_menu_monitor, container, false);
+        return inflater.inflate(R.layout.fragment_menu_about, container, false);
     }
 
 
@@ -23,7 +23,6 @@ public class MonitorFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         //you can set the title for your toolbar here for different fragments different titles
-        getActivity().setTitle("Heart Rate Monitor");
+        getActivity().setTitle("About");
     }
-
 }
