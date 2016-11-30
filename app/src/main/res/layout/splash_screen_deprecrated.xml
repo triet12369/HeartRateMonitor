@@ -12,9 +12,8 @@
         android:src="@drawable/bme_logo"
         android:layout_gravity="center"
         android:layout_marginTop="50dp"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="24dp"
+        />
 
     <TextView
         android:text="Capstone Design - Group 2"
@@ -24,7 +23,9 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Display1"
         android:textSize="24sp"
         android:textAlignment="center"
-        android:textColor="@android:color/background_light" />
+        android:textColor="@android:color/background_light"
+        android:textStyle="normal|bold"
+        android:gravity="center_horizontal"/>
 
     <TextView
         android:text="Heart Rate Monitor"
@@ -33,6 +34,39 @@
         android:id="@+id/text2"
         android:textAlignment="center"
         android:textSize="18sp"
-        android:textColor="@android:color/background_light" />
+        android:textColor="@android:color/background_light"
+        android:layout_marginBottom="24dp"
+        android:textStyle="normal|bold"
+        android:gravity="center_horizontal"/>
+
+    <TextView
+        android:text="Pham Thi Kim Chi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView3"
+        android:textAlignment="center"
+        android:textColor="@android:color/darker_gray"
+        android:textStyle="normal|bold"
+        android:gravity="center_horizontal"/>
+
+    <TextView
+        android:text="Truong An Phuc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView4"
+        android:textAlignment="center"
+        android:textColor="@android:color/darker_gray"
+        android:textStyle="normal|bold"
+        android:gravity="center_horizontal"/>
+
+    <TextView
+        android:text="Cao Hoang Minh Triet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView5"
+        android:textAlignment="center"
+        android:textColor="@android:color/darker_gray"
+        android:textStyle="normal|bold"
+        android:gravity="center_horizontal"/>
 
 </LinearLayout>
