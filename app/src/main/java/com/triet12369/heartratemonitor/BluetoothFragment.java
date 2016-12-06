@@ -17,9 +17,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import java.util.ArrayList;
@@ -29,7 +31,7 @@ import java.util.jar.Manifest;
 import static android.content.ContentValues.TAG;
 
 
-public class BluetoothFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
+public class BluetoothFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, View.OnClickListener{
     private static final String TAG = "BluetoothFragment";
     BluetoothAdapter mBluetoothAdapter;
     ToggleButton btnONOFF;
@@ -113,6 +115,32 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
         }
     };
 
+    private BroadcastReceiver mBroadcastReceiver4 = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            Log.d(TAG, "onReceive: ACTION FOUND.");
+
+            if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
+                BluetoothDevice mDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                //3 cases:
+                //case1: bonded already
+                if (mDevice.getBondState() == BluetoothDevice.BOND_BONDED){
+                    Log.d(TAG, "BroadcastReceiver: BOND_BONDED");
+
+                }
+                //case2: creating a bond
+                if (mDevice.getBondState() == BluetoothDevice.BOND_BONDING){
+                    Log.d(TAG, "BroadcastReceiver: BOND_BONDing");
+                }
+                //case3: breaking a bond
+                if (mDevice.getBondState() == BluetoothDevice.BOND_NONE){
+                    Log.d(TAG, "BroadcastReceiver: BOND_NONE");
+                }
+            }
+        }
+    };
+
     @Override
     public void onDestroy() {
         Log.d(TAG, "onDestroy: called.");
@@ -151,6 +179,17 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
                 e.printStackTrace();
             }
         }
+        if (mBroadcastReceiver4 != null) {
+            // Sometimes the Fragment onDestroy() unregisters the observer before calling below code
+            // See <a>http://stackoverflow.com/questions/6165070/receiver-not-registered-exception-error</a>
+            try  {
+                getActivity().unregisterReceiver(mBroadcastReceiver3);
+                mBroadcastReceiver4 = null;
+            }
+            catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            }
+        }
         }
 
 
@@ -183,6 +222,35 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
         btnD.setOnClickListener(this);
         lvNewDevices = (ListView) getView().findViewById(R.id.lvNewDevices);
         mBTDevices = new ArrayList<>();
+
+        //Broadcasts when bond state changes
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+        getActivity().registerReceiver(mBroadcastReceiver4, filter);
+
+        lvNewDevices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                //cancel discovery
+                mBluetoothAdapter.cancelDiscovery();
+
+                Log.d(TAG, "onItemClick: You clicked a device.");
+                String deviceName = mBTDevices.get(position).getName();
+                String deviceAddress = mBTDevices.get(position).getAddress();
+
+                Log.d(TAG, "onItemClick: deviceName = " + deviceName);
+                Log.d(TAG, "onItemClick: deviceAddress = " + deviceAddress);
+
+                //create the bond
+                if(Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                    Log.d(TAG, "Trying to pair with " + deviceName);
+                    mBTDevices.get(position).createBond();
+                    Toast.makeText(getActivity(), "Pairing", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    Toast.makeText(getActivity(), "API not supported. Please manually pair the device in the Bluetooth settings", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
             }
 
     public void enableBT() {
@@ -231,6 +299,7 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
                 break;
             case R.id.buttonDiscover:
                 Log.d(TAG, "btnD: Looking for unpaired devices.");
+                mBTDevices.clear();
                 if (mBluetoothAdapter.isDiscovering()) {
                     mBluetoothAdapter.cancelDiscovery();
                     Log.d(TAG, "btnD: Canceling discovery.");
@@ -260,4 +329,5 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
             Log.d(TAG, "checkBTPermissions: No need to check permissions.");
         }
     }
+
 }
