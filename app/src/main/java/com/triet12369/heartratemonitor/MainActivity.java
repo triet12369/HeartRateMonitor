@@ -1,11 +1,13 @@
 package com.triet12369.heartratemonitor;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.ShareCompat;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -76,10 +78,8 @@ public class MainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            Fragment fragment = new SettingsFragment();
-            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            ft.replace(R.id.content_frame, fragment);
-            ft.commit();
+            Intent intent = new Intent(this, AboutActivity.class);
+            startActivity(intent);
             return true;
         }
 
@@ -109,8 +109,8 @@ public class MainActivity extends AppCompatActivity
             case R.id.nav_monitor:
                 fragment = new MonitorFragment();
                 break;
-            case R.id.nav_about:
-                fragment = new AboutFragment();
+            case R.id.nav_settings:
+                fragment = new SettingsFragment();
                 break;
         }
 
