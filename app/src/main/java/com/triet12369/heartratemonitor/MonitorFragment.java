@@ -30,11 +30,11 @@ public class MonitorFragment extends Fragment {
         graph.getGridLabelRenderer().setHighlightZeroLines(false); //remove highlight of zero lines
 
         graph.getGridLabelRenderer().setHorizontalLabelsVisible(false);// remove horizontal x labels and line
-        graph.getGridLabelRenderer().setVerticalLabelsVisible(false);
+//        graph.getGridLabelRenderer().setVerticalLabelsVisible(false);
         graph.getViewport().setMinX(0);
-        graph.getViewport().setMaxX(10);
-        graph.getViewport().setMinY(-2.0);
-        graph.getViewport().setMaxY(2.0);
+        graph.getViewport().setMaxX(16);
+        graph.getViewport().setMinY(-1);
+        graph.getViewport().setMaxY(1);
 
         graph.getViewport().setYAxisBoundsManual(true);
         graph.getViewport().setXAxisBoundsManual(true);
@@ -44,6 +44,8 @@ public class MonitorFragment extends Fragment {
 
         TextView heartValue = (TextView) rootView.findViewById(R.id.HeartVal);
         heartValue.setText(""+heartVal);
+//        float[] l=lowPass(DemoData,2);
+//        heartValue.setText(""+QRS(l,2));
         return rootView;
     }
     @Override
@@ -54,7 +56,7 @@ public class MonitorFragment extends Fragment {
     }
 
 
-    int heartVal = 120;
+    int heartVal = 0;
     String heartComment=" ";
 
     private String Comment(int heartVal) {
@@ -73,18 +75,20 @@ public class MonitorFragment extends Fragment {
     private final Handler mHandler = new Handler();
     private Runnable mTimer1;
     private LineGraphSeries<DataPoint> mSeries1;
-
+    int j=0;
     @Override
     public void onResume() {
         super.onResume();
         mTimer1 = new Runnable() {
             @Override
             public void run() {
+                if (j<28){
+                j=j+1;} else {j=0;}
                 mSeries1.resetData(generateData());
-                mHandler.postDelayed(this, 300);
+                mHandler.postDelayed(this, 200);
             }
         };
-        mHandler.postDelayed(mTimer1, 300);
+        mHandler.postDelayed(mTimer1, 200);
     }
 
 //    @Override
@@ -93,23 +97,41 @@ public class MonitorFragment extends Fragment {
 //
 //        super.onPause();
 //    }
+double[] DemoData = {0.02, 0.02, 0.02, 0.02, 0.05, 0.07, 0.06, 0.09, 0.06,
+                -0.2, 0.9, 0.5, -0.1, 0.02, 0.02, 0.04, 0.1, 0.08, 0.03, 0.02, 0.02,0.02, 0.02, 0.02, 0.05, 0.07, 0.06, 0.09, 0.06,
+                -0.2, 0.9, 0.5, -0.1, 0.02, 0.02, 0.04, 0.1, 0.08, 0.03, 0.02, 0.02, 0.02, 0.02, 0.02};
 
     private DataPoint[] generateData() {
-        int count = 10;
+        int count = 16;
+
         DataPoint[] values = new DataPoint[count];
-        for (int i=0; i<count; i++) {
+//        int j=0;
+
+            int i=0;
+        while (i<count){
             double x = i;
             double f = mRand.nextDouble()*0.15+0.3;
             double y;
-            y = Math.sin(i*f+2) + mRand.nextDouble()*0.3;
+//            y = Math.sin(i*f+2) + mRand.nextDouble()*0.3;
 
+              y=DemoData[i+j];
             DataPoint v = new DataPoint(x, y);
             values[i] = v;
+            i=i+1;
+//            if (i==10){
+//                j=j+1;
+//            }
+
         }
+
         return values;
     }
+
+
     Random mRand = new Random();
 
-}
 
+
+//  
+}
 
