@@ -18,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
@@ -25,6 +26,8 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.jar.Manifest;
 
@@ -38,8 +41,10 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
     Button btnDA;
     Button btnD;
     public ArrayList<BluetoothDevice> mBTDevices = new ArrayList<>();
+    public ArrayList<BluetoothDevice> mPairedBTDevices = new ArrayList<>();
     public DeviceListAdapter mDeviceListAdapter;
     ListView lvNewDevices;
+    ListView lvPairedDevices;
 
     // Create a BroadcastReceiver for ACTION_FOUND
     private BroadcastReceiver mBroadcastReceiver1 = new BroadcastReceiver() {
@@ -120,9 +125,9 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             Log.d(TAG, "onReceive: ACTION FOUND.");
-
             if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
                 BluetoothDevice mDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+
                 //3 cases:
                 //case1: bonded already
                 if (mDevice.getBondState() == BluetoothDevice.BOND_BONDED){
@@ -131,7 +136,7 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
                 }
                 //case2: creating a bond
                 if (mDevice.getBondState() == BluetoothDevice.BOND_BONDING){
-                    Log.d(TAG, "BroadcastReceiver: BOND_BONDing");
+                    Log.d(TAG, "BroadcastReceiver: BOND_BONDING");
                 }
                 //case3: breaking a bond
                 if (mDevice.getBondState() == BluetoothDevice.BOND_NONE){
@@ -183,7 +188,7 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
             // Sometimes the Fragment onDestroy() unregisters the observer before calling below code
             // See <a>http://stackoverflow.com/questions/6165070/receiver-not-registered-exception-error</a>
             try  {
-                getActivity().unregisterReceiver(mBroadcastReceiver3);
+                getActivity().unregisterReceiver(mBroadcastReceiver4);
                 mBroadcastReceiver4 = null;
             }
             catch (IllegalArgumentException e) {
@@ -221,7 +226,9 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
         btnD = (Button) getView().findViewById(R.id.buttonDiscover);
         btnD.setOnClickListener(this);
         lvNewDevices = (ListView) getView().findViewById(R.id.lvNewDevices);
+        lvPairedDevices = (ListView) getView().findViewById(R.id.lvPairedDevices);
         mBTDevices = new ArrayList<>();
+        mPairedBTDevices = new ArrayList<>();
 
         //Broadcasts when bond state changes
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
@@ -300,6 +307,10 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
             case R.id.buttonDiscover:
                 Log.d(TAG, "btnD: Looking for unpaired devices.");
                 mBTDevices.clear();
+
+                getPairedDevices();
+                mDeviceListAdapter = new DeviceListAdapter(getContext(), R.layout.device_adapter_view, mPairedBTDevices);
+                lvPairedDevices.setAdapter(mDeviceListAdapter);
                 if (mBluetoothAdapter.isDiscovering()) {
                     mBluetoothAdapter.cancelDiscovery();
                     Log.d(TAG, "btnD: Canceling discovery.");
@@ -327,6 +338,17 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
             }
         } else {
             Log.d(TAG, "checkBTPermissions: No need to check permissions.");
+        }
+    }
+
+    private void getPairedDevices () {
+        Set<BluetoothDevice> temp;
+        temp = mBluetoothAdapter.getBondedDevices();
+        mPairedBTDevices.clear();
+        if (temp.size() > 0) {
+            for(BluetoothDevice device:temp) {
+                mPairedBTDevices.add(device);
+            }
         }
     }
 

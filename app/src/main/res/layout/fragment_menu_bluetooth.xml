@@ -10,7 +10,7 @@
         android:id="@+id/toggleButton"
         android:checked="false"
         android:layout_marginLeft="48dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="12dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
@@ -24,27 +24,64 @@
         android:layout_below="@+id/toggleButton"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:layout_marginTop="24dp" />
+        android:layout_marginTop="12dp" />
 
     <Button
-        android:text="Discover"
+        android:text="Refresh"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/buttonDiscover"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="12dp"
         android:layout_below="@+id/buttonDiscoverAbility"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
         />
 
+    <TextView
+        android:text="Current Devices"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView6"
+        android:layout_alignBottom="@+id/lvNewDevices"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="60dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+
+    <TextView
+        android:text="Paired Devices"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView7"
+        android:layout_alignBottom="@+id/lvPairedDevices"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="60dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Display1"/>
+
     <ListView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="150dp"
+        android:layout_below="@+id/lvNewDevices"
+        android:layout_marginTop="12dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginRight="24dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/listview_border"
+        android:id="@+id/lvPairedDevices"
+        android:paddingRight="12dp"
+        android:paddingLeft="12dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+
+         />
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
         android:layout_below="@+id/buttonDiscover"
         android:layout_marginTop="24dp"
         android:layout_marginLeft="24dp"
         android:layout_marginRight="24dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="12dp"
         android:background="@drawable/listview_border"
         android:id="@+id/lvNewDevices"
         android:paddingRight="12dp"

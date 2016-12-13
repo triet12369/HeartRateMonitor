@@ -7,7 +7,10 @@
         android:text="TextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/tvDeviceName" />
+        android:id="@+id/tvDeviceName"
+        android:textAppearance="@android:style/TextAppearance.Material.Small"
+        android:textStyle="normal|bold"
+        android:textColor="@android:color/background_dark" />
 
     <TextView
         android:text="TextView"
