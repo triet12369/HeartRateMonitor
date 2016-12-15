@@ -32,13 +32,13 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
     TextView testValue;
     Button buttonPause, buttonConnect;
     Handler bluetoothIn;
-
+    private BluetoothDevice device;
     final int handlerState = 0;
     private BluetoothSocket btSocket = null;
     private StringBuilder recDataString = new StringBuilder();
 
     private static final UUID BTMODULEUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    private static String address = "20:16:05:24:64:80";
+    public static String address; //"20:16:05:24:64:80"
 
     int Cpause=0;
 
@@ -99,7 +99,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                     Pattern p = Pattern.compile("\\[(.*?)\\]");
                     Matcher m = p.matcher(readMessage);
                     while (m.find()){
-                        testValue.setText(""+Data.size());
+                        testValue.setText(m.group(1));
                         graph2LastXValue += 1d;
                         mSeries.appendData(new DataPoint(graph2LastXValue, Integer.parseInt(m.group(1))), true, 42);
                         if (Data.size() < DATA_SIZE) {
@@ -184,11 +184,17 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(getActivity(), "Connecting", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), "Connecting", Toast.LENGTH_LONG).show();
                             }
                         });
                         BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
-                        BluetoothDevice device = btAdapter.getRemoteDevice(address);
+
+                        if (address == null) {
+                            address = "20:16:05:24:64:80";
+                            device = btAdapter.getRemoteDevice(address);
+                        } else {
+                            device = btAdapter.getRemoteDevice(address);
+                        }
                         if (btAdapter.isEnabled()){
                             try {
                                 btSocket = createBluetoothSocket(device);
@@ -196,7 +202,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                                 getActivity().runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        Toast.makeText(getActivity(), "Socket creation failed", Toast.LENGTH_LONG).show();
+                                        Toast.makeText(getActivity(), "Socket creation failed", Toast.LENGTH_SHORT).show();
                                     }
                                 });                        }
                             // Establish the Bluetooth socket connection.
