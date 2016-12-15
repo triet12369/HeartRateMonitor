@@ -6,13 +6,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,10 +21,6 @@ import android.widget.ListView;
 import android.widget.ToggleButton;
 
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
-import java.util.jar.Manifest;
-
-import static android.content.ContentValues.TAG;
 
 
 public class BluetoothFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
@@ -165,7 +159,18 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         //returning our layout file
         //change R.layout.yourlayoutfilename for each of your fragments
-                return inflater.inflate(R.layout.fragment_menu_bluetooth, container, false);
+        View view = inflater.inflate(R.layout.fragment_menu_bluetooth,container,false);
+
+//        editText=(EditText)view.findViewById(R.id.name);
+//        button=(Button)view.findViewById(R.id.submit_id);
+//        button.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View view){
+//                String Name = editText.getText().toString();
+//                onNameSetListener.setName(Name);
+//            }
+//        });
+        return view;
 
     }
 
@@ -260,4 +265,21 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
             Log.d(TAG, "checkBTPermissions: No need to check permissions.");
         }
     }
+
+//    EditText editText;
+//    Button button;
+//    OnNameSetListener onNameSetListener;
+//
+//
+//    public interface OnNameSetListener {
+//        public void setName (String name);
+//    }
+
+//    @Override
+//    public void onAttach(Activity activity){
+//        super.onAttach(activity);
+//        try {
+//            onNameSetListener = (OnNameSetListener) activity;
+//        } catch (Exception e){}
+//    }
 }
