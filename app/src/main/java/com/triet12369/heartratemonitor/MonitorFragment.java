@@ -49,6 +49,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
 
     private LinkedList Data = new LinkedList();
     int DATA_SIZE = 500;
+    int VIEW_WINDOW = 100;
     int handlerControl = 0;
 
     @Nullable
@@ -65,7 +66,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
         graph.getViewport().setXAxisBoundsManual(true);
         graph.getViewport().setYAxisBoundsManual(true);
         graph.getViewport().setMinX(0);
-        graph.getViewport().setMaxX(40);
+        graph.getViewport().setMaxX(VIEW_WINDOW);
         graph.getGridLabelRenderer().setHighlightZeroLines(false);
         graph.getGridLabelRenderer().setHorizontalLabelsVisible(false);
         graph.getGridLabelRenderer().setVerticalLabelsVisible(false);
@@ -101,7 +102,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                     while (m.find()){
                         testValue.setText(m.group(1));
                         graph2LastXValue += 1d;
-                        mSeries.appendData(new DataPoint(graph2LastXValue, Integer.parseInt(m.group(1))), true, 42);
+                        mSeries.appendData(new DataPoint(graph2LastXValue, Integer.parseInt(m.group(1))), true, VIEW_WINDOW + 1);
                         if (Data.size() < DATA_SIZE) {
                             Data.add(Integer.parseInt(m.group(1)));
                         } else {
@@ -150,7 +151,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                     GraphView graph = (GraphView) getView().findViewById(R.id.graph);
                     graph.getViewport().setMinY(0);
                     graph.getViewport().setMaxY(1200);
-                    graph.getViewport().setMinX(Data.size() - 40);
+                    graph.getViewport().setMinX(Data.size() - VIEW_WINDOW);
                     graph.getViewport().setMaxX(Data.size());
                     graph.getViewport().setYAxisBoundsManual(true);
                     graph.getViewport().setXAxisBoundsManual(true);
@@ -166,7 +167,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                     graph.removeAllSeries();
                     graph.addSeries(mSeries);
                     graph.getViewport().setMinX(0);
-                    graph.getViewport().setMaxX(40);
+                    graph.getViewport().setMaxX(VIEW_WINDOW);
                     graph.getGridLabelRenderer().setHighlightZeroLines(false);
                     graph.getGridLabelRenderer().setHorizontalLabelsVisible(false);
                     graph.getGridLabelRenderer().setVerticalLabelsVisible(false);
