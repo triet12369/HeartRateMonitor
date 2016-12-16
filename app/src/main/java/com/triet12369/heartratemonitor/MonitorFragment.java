@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -26,6 +27,8 @@ import java.util.regex.Pattern;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
+import static java.lang.Math.toIntExact;
+
 
 public class MonitorFragment extends Fragment implements View.OnClickListener{
 
@@ -51,6 +54,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
     int DATA_SIZE = 500;
     int VIEW_WINDOW = 100;
     int handlerControl = 0;
+
 
     @Nullable
     @Override
@@ -83,26 +87,70 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
         //you can set the title for your toolbar here for different fragments different titles
         getActivity().setTitle("Heart Rate Monitor");
         testValue = (TextView) getView().findViewById(R.id.textView2);
+        testValue.setText(R.string.status_standby);
         buttonPause = (Button) getView().findViewById(R.id.buttonPause);
         buttonPause.setOnClickListener(this);
         buttonConnect = (Button) getView().findViewById(R.id.buttonConnect);
         buttonConnect.setOnClickListener(this);
         Data.clear();
+
         bluetoothIn = new Handler() {
             public void handleMessage(Message msg) {
+                StringBuilder temp = new StringBuilder();
+
+                int check = 0;
                 if (msg.what == handlerControl) {
                     String readMessage = (String) msg.obj;
+                    recDataString.append(readMessage);
+                    if (recDataString.charAt(recDataString.length()-1) == ']') {
+                        for (int i=0; i < recDataString.length(); i++) {
+                            if (recDataString.charAt(i) == '[') {
+                                check = 1;
+                            }
+                            if (recDataString.charAt(i) == ']' && check == 1) {
+                                check = 0;
+                                testValue.setText(R.string.status_connected);
+                                //testValue.setText(""+readMessage);
+                                graph2LastXValue += 1d;
+                                mSeries.appendData(new DataPoint(graph2LastXValue, Integer.parseInt(temp.toString())), true, VIEW_WINDOW + 1);
+
+                                if (Data.size() < DATA_SIZE) {
+                                    Data.add(Integer.parseInt(temp.toString()));
+                                } else {
+                                    Data.removeFirst();
+                                    Data.add(Integer.parseInt(temp.toString()));
+
+                                }
+                                temp.delete(0, temp.length());
+                            }
+                            if (check == 1 && recDataString.charAt(i) != '[') {
+                                temp.append(recDataString.charAt(i));
+                            }
+                        }
+                        recDataString.delete(0, recDataString.length());
+                    }
+
                     /*
                     recDataString.append(readMessage);
                     if (recDataString.length() > 5) {
                         recDataString.delete(0, recDataString.length());
                     } */
+                    /*
                     Pattern p = Pattern.compile("\\[(.*?)\\]");
                     Matcher m = p.matcher(readMessage);
+
+
                     while (m.find()){
-                        testValue.setText(m.group(1));
-                        graph2LastXValue += 1d;
-                        mSeries.appendData(new DataPoint(graph2LastXValue, Integer.parseInt(m.group(1))), true, VIEW_WINDOW + 1);
+                        if (m.group(1) == "!"){
+                            graph2LastXValue += 1d;
+                            mSeries.appendData(new DataPoint(graph2LastXValue, 0), true, VIEW_WINDOW + 1);
+                            testValue.setText(R.string.leads_off);
+                        } else {
+                            testValue.setText(R.string.status_connected);
+                            graph2LastXValue += 1d;
+                            mSeries.appendData(new DataPoint(graph2LastXValue, Integer.parseInt(m.group(1))), true, VIEW_WINDOW + 1);
+                        }
+
                         if (Data.size() < DATA_SIZE) {
                             Data.add(Integer.parseInt(m.group(1)));
                         } else {
@@ -111,7 +159,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
 
                         }
 
-                    }
+                    } */
                 }
             }
         };
@@ -185,7 +233,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(getActivity(), "Connecting", Toast.LENGTH_LONG).show();
+                                testValue.setText(R.string.status_connecting);
                             }
                         });
                         BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -238,6 +286,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
     private class ConnectedThread extends Thread {
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
+        private final StringBuilder temp = new StringBuilder();
 
         //creation of the connect thread
         public ConnectedThread(BluetoothSocket socket) {
@@ -256,16 +305,19 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
         }
 
         public void run() {
-            byte[] buffer = new byte[256];
+            byte[] buffer = new byte[512];
             int bytes;
 
             // Keep looping to listen for received messages
             while (true) {
                 try {
-                    bytes = mmInStream.read(buffer);            //read bytes from input buffer
-                    String readMessage = new String(buffer, 0, bytes);
-                    // Send the obtained bytes to the UI Activity via handler
-                    bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
+                    if (mmInStream.available() > 0){
+                        bytes = mmInStream.read(buffer);            //read bytes from input buffer
+                        String readMessage = new String(buffer, 0, bytes);
+                        // Send the obtained bytes to the UI Activity via handler
+                        bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
+                    }
+
                 } catch (IOException e) {
                     break;
                 }

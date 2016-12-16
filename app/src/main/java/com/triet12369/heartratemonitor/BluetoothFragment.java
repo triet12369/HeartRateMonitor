@@ -262,8 +262,8 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Log.d(TAG, "onItemClick: You clicked a device.");
-                String deviceName = mBTDevices.get(position).getName();
-                MonitorFragment.address = mBTDevices.get(position).getAddress();
+                String deviceName = mPairedBTDevices.get(position).getName();
+                MonitorFragment.address = mPairedBTDevices.get(position).getAddress();
                 Toast.makeText(getActivity(), deviceName + " selected", Toast.LENGTH_SHORT).show();
             }
         });
