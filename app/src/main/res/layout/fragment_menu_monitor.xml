@@ -53,12 +53,6 @@
                     android:text="ECG status:"
                     style="@style/text"
                     android:layout_marginTop="8dp"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Comment"
-                    style="@style/text"
-                    android:layout_marginTop="8dp"/>
             </LinearLayout>
 
             <LinearLayout
@@ -81,13 +75,6 @@
                     android:text="Normal"
                     style="@style/text"
                     android:id="@+id/ECGStatus"
-                    android:layout_marginTop="8dp"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=" "
-                    style="@style/text"
-                    android:id="@+id/comment"
                     android:layout_marginTop="8dp"/>
 
             </LinearLayout>

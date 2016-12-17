@@ -20,19 +20,27 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
+import java.sql.BatchUpdateException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
+
+import static com.triet12369.heartratemonitor.R.id.graph;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.toIntExact;
 
 
 public class MonitorFragment extends Fragment implements View.OnClickListener{
 
-    TextView testValue;
+    TextView testValue, textHeartValue, ecgStatus;
     Button buttonPause, buttonConnect;
     Handler bluetoothIn;
     private BluetoothDevice device;
@@ -45,15 +53,20 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
 
     int Cpause=0;
 
-    private Handler mHandler = new Handler();
-    private Runnable mTimer;
+    private final Handler mHandler = new Handler();
     private LineGraphSeries mSeries;
     private double graph2LastXValue = 5d;
 
     private LinkedList Data = new LinkedList();
-    int DATA_SIZE = 500;
-    int VIEW_WINDOW = 100;
+    int DATA_SIZE = 1000;
+    int VIEW_WINDOW = 250;
     int handlerControl = 0;
+
+    private int heartVal;
+    private int fs = 120;
+    double Rthreshold=500;
+    private int maxY = 1000;
+    private int minY = 0;
 
 
     @Nullable
@@ -74,8 +87,9 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
         graph.getGridLabelRenderer().setHighlightZeroLines(false);
         graph.getGridLabelRenderer().setHorizontalLabelsVisible(false);
         graph.getGridLabelRenderer().setVerticalLabelsVisible(false);
-        graph.getViewport().setMinY(0);
-        graph.getViewport().setMaxY(1200);
+        graph.getGridLabelRenderer().setGridStyle(GridLabelRenderer.GridStyle.NONE);
+        graph.getViewport().setMinY(minY);
+        graph.getViewport().setMaxY(maxY);
 
         return rootView;
     }
@@ -87,7 +101,9 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
         //you can set the title for your toolbar here for different fragments different titles
         getActivity().setTitle("Heart Rate Monitor");
         testValue = (TextView) getView().findViewById(R.id.textView2);
-        testValue.setText(R.string.status_standby);
+        textHeartValue = (TextView) getView().findViewById(R.id.HeartVal);
+        ecgStatus = (TextView) getView().findViewById(R.id.ECGStatus);
+        ecgStatus.setText(R.string.status_standby);
         buttonPause = (Button) getView().findViewById(R.id.buttonPause);
         buttonPause.setOnClickListener(this);
         buttonConnect = (Button) getView().findViewById(R.id.buttonConnect);
@@ -102,24 +118,30 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                 if (msg.what == handlerControl) {
                     String readMessage = (String) msg.obj;
                     recDataString.append(readMessage);
-                    if (recDataString.charAt(recDataString.length()-1) == ']') {
+                    if (recDataString.charAt(recDataString.length()-1) != ']') {
                         for (int i=0; i < recDataString.length(); i++) {
                             if (recDataString.charAt(i) == '[') {
                                 check = 1;
                             }
                             if (recDataString.charAt(i) == ']' && check == 1) {
-                                check = 0;
-                                testValue.setText(R.string.status_connected);
-                                //testValue.setText(""+readMessage);
-                                graph2LastXValue += 1d;
-                                mSeries.appendData(new DataPoint(graph2LastXValue, Integer.parseInt(temp.toString())), true, VIEW_WINDOW + 1);
-
-                                if (Data.size() < DATA_SIZE) {
-                                    Data.add(Integer.parseInt(temp.toString()));
+                                if (temp.charAt(0) == 'a') {
+                                    check = 0;
+                                    ecgStatus.setText(R.string.leads_off);
+                                    graph2LastXValue += 1d;
+                                    mSeries.appendData(new DataPoint(graph2LastXValue, 500), true, VIEW_WINDOW + 1);
                                 } else {
-                                    Data.removeFirst();
-                                    Data.add(Integer.parseInt(temp.toString()));
-
+                                    check = 0;
+                                    ecgStatus.setText(R.string.status_connected);
+                                    //testValue.setText(""+readMessage);
+                                    graph2LastXValue += 1d;
+                                    mSeries.appendData(new DataPoint(graph2LastXValue, Integer.parseInt(temp.toString())), true, VIEW_WINDOW + 1);
+                                    if (Data.size() < DATA_SIZE) {
+                                        Data.add(Integer.parseInt(temp.toString()));
+                                    } else {
+                                        Data.removeFirst();
+                                        Data.add(Integer.parseInt(temp.toString()));
+                                    }
+                                    recDataString.delete(0, i);
                                 }
                                 temp.delete(0, temp.length());
                             }
@@ -127,44 +149,34 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                                 temp.append(recDataString.charAt(i));
                             }
                         }
-                        recDataString.delete(0, recDataString.length());
+
                     }
-
-                    /*
-                    recDataString.append(readMessage);
-                    if (recDataString.length() > 5) {
-                        recDataString.delete(0, recDataString.length());
-                    } */
-                    /*
-                    Pattern p = Pattern.compile("\\[(.*?)\\]");
-                    Matcher m = p.matcher(readMessage);
-
-
-                    while (m.find()){
-                        if (m.group(1) == "!"){
-                            graph2LastXValue += 1d;
-                            mSeries.appendData(new DataPoint(graph2LastXValue, 0), true, VIEW_WINDOW + 1);
-                            testValue.setText(R.string.leads_off);
-                        } else {
-                            testValue.setText(R.string.status_connected);
-                            graph2LastXValue += 1d;
-                            mSeries.appendData(new DataPoint(graph2LastXValue, Integer.parseInt(m.group(1))), true, VIEW_WINDOW + 1);
-                        }
-
-                        if (Data.size() < DATA_SIZE) {
-                            Data.add(Integer.parseInt(m.group(1)));
-                        } else {
-                            Data.removeFirst();
-                            Data.add(Integer.parseInt(m.group(1)));
-
-                        }
-
-                    } */
+                    }
                 }
-            }
         };
 
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                int[] BufferData = new int[Data.size()];
+                for (int i = 0; i < Data.size(); i++) {
+                    BufferData[i] = (Integer) Data.get(i);
+                }
 
+                heartVal = (int)(60/RRCal(BufferData));
+
+                if (BufferData.length > 0) {
+                    textHeartValue.setText(""+heartVal);
+                    maxY = maxInt(BufferData);
+                    minY = minInt(BufferData);
+                    GraphView graph = (GraphView) getView().findViewById(R.id.graph);
+                    graph.getViewport().setMinY(minY-200);
+                    graph.getViewport().setMaxY(maxY+200);
+                    Rthreshold = maxY - (maxY-minY)/3;
+                }
+                mHandler.postDelayed(this, 2000);
+            }
+        }, 0);
 
 
 
@@ -185,6 +197,8 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
         } catch (IOException e) {
 
         }
+        mHandler.removeCallbacksAndMessages(null);
+
     }
     public void onClick (View view) {
         switch (view.getId()){
@@ -197,14 +211,14 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                     }
                     LineGraphSeries<DataPoint> series = new LineGraphSeries<>(bufferData);
                     GraphView graph = (GraphView) getView().findViewById(R.id.graph);
-                    graph.getViewport().setMinY(0);
-                    graph.getViewport().setMaxY(1200);
+                    graph.getViewport().setMinY(minY-200);
+                    graph.getViewport().setMaxY(maxY+200);
                     graph.getViewport().setMinX(Data.size() - VIEW_WINDOW);
                     graph.getViewport().setMaxX(Data.size());
                     graph.getViewport().setYAxisBoundsManual(true);
                     graph.getViewport().setXAxisBoundsManual(true);
                     graph.getViewport().setScalable(true);
-                    graph.getViewport().setScalableY(true);
+                    //graph.getViewport().setScalableY(true);
                     graph.removeAllSeries();
                     graph.addSeries(series);
 
@@ -219,8 +233,8 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                     graph.getGridLabelRenderer().setHighlightZeroLines(false);
                     graph.getGridLabelRenderer().setHorizontalLabelsVisible(false);
                     graph.getGridLabelRenderer().setVerticalLabelsVisible(false);
-                    graph.getViewport().setMinY(0);
-                    graph.getViewport().setMaxY(1200);
+                    graph.getViewport().setMinY(minY-200);
+                    graph.getViewport().setMaxY(maxY+200);
                     graph.getViewport().setXAxisBoundsManual(true);
                     graph.getViewport().setYAxisBoundsManual(true);
 
@@ -233,7 +247,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                testValue.setText(R.string.status_connecting);
+                                ecgStatus.setText(R.string.status_connecting);
                             }
                         });
                         BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -305,7 +319,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
         }
 
         public void run() {
-            byte[] buffer = new byte[512];
+            byte[] buffer = new byte[20];
             int bytes;
 
             // Keep looping to listen for received messages
@@ -354,6 +368,47 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
             }
         }
         return minV;
+    }
+    private int[] findpeaksloc(int[] data){
+        int[] peaklocsTemp= new int[data.length];
+        int countP=0;
+        for (int i=1;i<data.length-1;i++){
+            if ((data[i]>=Rthreshold)&&(data[i-1]<data[i])&&(data[i+1]<data[i])){
+                countP=countP+1;
+                peaklocsTemp[countP-1]=i;
+            }
+        }
+        int[] peaklocs=new int[countP];
+        for (int j=0;j<countP;j++){
+            peaklocs[j]=peaklocsTemp[j];
+        }
+        return peaklocs;
+    }
+
+    //calculate the mean of heart rate
+    private double RRCal (int[] data){
+        int[] peak=findpeaksloc(data);
+//        int count=0;
+        int sumdiff=0;
+        double[] RR=new double[peak.length];
+        for (int i=1;i<peak.length;i++){
+            int diff=peak[i]-peak[i-1];
+            RR[i]=(double)diff/fs;
+//            sumdiff=sumdiff+RR;
+//            count=count+1;
+        }
+        //RR=sumdiff/count;
+        double RRVal=meanDouble(RR);
+        return RRVal;
+    }
+    private double meanDouble(double[] data){
+        double sum=0;
+        double meanV=0;
+        for (int i=0;i<data.length;i++){
+            sum=sum+data[i];
+        }
+        meanV=sum/data.length;
+        return meanV;
     }
 
 }
