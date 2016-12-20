@@ -115,17 +115,18 @@ public class HistoryActivity extends AppCompatActivity{
             graph.getViewport().setMinY(0);
             graph.getViewport().setMaxY(150);
             graph.getViewport().setScalable(true);
+            mSeries.setOnDataPointTapListener(new OnDataPointTapListener() {
+                @Override
+                public void onTap(Series series, DataPointInterface dataPoint) {
+                    Date date = new Date((long) dataPoint.getX());
+                    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm dd/MM/yyyy");
+                    sdf.setTimeZone(TimeZone.getTimeZone("GMT+7"));
+                    String formattedDate = sdf.format(date);
+                    Toast.makeText(HistoryActivity.this, "HR: "+ (int) dataPoint.getY() + ", "+ formattedDate, Toast.LENGTH_SHORT).show();
+                }
+            });
         }
-        mSeries.setOnDataPointTapListener(new OnDataPointTapListener() {
-            @Override
-            public void onTap(Series series, DataPointInterface dataPoint) {
-                Date date = new Date((long) dataPoint.getX());
-                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm dd/MM/yyyy");
-                sdf.setTimeZone(TimeZone.getTimeZone("GMT+7"));
-                String formattedDate = sdf.format(date);
-                Toast.makeText(HistoryActivity.this, "HR: "+ (int) dataPoint.getY() + ", "+ formattedDate, Toast.LENGTH_SHORT).show();
-            }
-        });
+
 
 
     }

@@ -35,7 +35,10 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.jjoe64.graphview.GraphView;
@@ -65,6 +68,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
     int Cpause=0;
 
     private final Handler mHandler = new Handler();
+    Timer t = new Timer();
     private LineGraphSeries mSeries, mSeries2;
     private double graph2LastXValue = 5d;
 
@@ -207,7 +211,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                 //Log.d(TAG, "debug: " + Arrays.toString(heartValArray));
 
                 if (heartVal > 20 && heartVal < 200) {
-                    if (smoothBuffer.size() < 5) {
+                    if (smoothBuffer.size() < 10) {
                         smoothBuffer.add(heartVal);
                     } else {
                         smoothBuffer.removeFirst();
@@ -236,6 +240,35 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
             }
         }, 0);
 
+        t.scheduleAtFixedRate(new TimerTask() {
+
+            @Override
+            public void run() {
+                if (heartVal > 20 && heartVal < 200 && handlerControl == 0) {
+                    Calendar calendar = Calendar.getInstance();
+                    Date d = calendar.getTime();
+                    String data = output + "," + d + ";" + "\n";
+                    String filename = "history_log";
+                    FileOutputStream outputStream;
+                    try {
+                        outputStream = getContext().openFileOutput(filename, Context.MODE_APPEND);
+                        outputStream.write(data.getBytes());
+                        Toast.makeText(getActivity(), "Added to history", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "Append: " + data);
+                        outputStream.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    Log.d(TAG, "Read: " + readFromFile(filename, getContext()));
+                }
+            }
+
+        },
+            //Set how long before to start calling the TimerTask (in milliseconds)
+                0,
+                //Set the amount of time between each execution (in milliseconds)
+                10000);
+
 
 
 
@@ -256,7 +289,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
 
         }
         mHandler.removeCallbacksAndMessages(null);
-
+        t.cancel();
     }
     public void onClick (View view) {
         switch (view.getId()){
