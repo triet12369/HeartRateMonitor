@@ -32,6 +32,12 @@
         <!--android:layout_marginTop="8dp"-->
         <!--android:layout_marginBottom="8dp"/>-->
 
+        <CheckBox
+            android:text="Show Threshold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/checkThreshold" />
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -42,11 +48,14 @@
                 android:orientation="vertical"
                 android:paddingTop="8dp"
                 android:id="@+id/statusLabel"    >
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Heart rate:"
+                    android:textSize="36sp"
                     style="@style/text"/>
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -61,14 +70,19 @@
                 android:orientation="vertical"
                 android:paddingTop="8dp"
                 android:id="@+id/statusVal"
-                android:layout_toRightOf="@id/statusLabel"
-                android:layout_marginLeft="25dp">
+                android:layout_alignParentTop="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginRight="46dp"
+                android:layout_marginEnd="46dp">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text=" "
                     style="@style/text"
-                    android:id="@+id/HeartVal"/>
+                    android:id="@+id/HeartVal"
+                    android:textStyle="normal|bold"
+                    android:textSize="36sp" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -92,6 +106,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/buttonConnect" />
+
+        <Button
+            android:text="add to history"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/buttonAppend" />
 
     </LinearLayout>
 </ScrollView>

@@ -15,7 +15,7 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         />
-
+<!--
     <Button
         android:text="Enable Discoverable"
         android:layout_width="wrap_content"
@@ -24,7 +24,7 @@
         android:layout_below="@+id/toggleButton"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:layout_marginTop="12dp" />
+        android:layout_marginTop="12dp" /> -->
 
     <Button
         android:text="Refresh"
@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/buttonDiscover"
         android:layout_marginTop="12dp"
-        android:layout_below="@+id/buttonDiscoverAbility"
+        android:layout_below="@+id/toggleButton"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
         />

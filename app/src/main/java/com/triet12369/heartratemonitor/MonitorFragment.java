@@ -3,6 +3,8 @@ package com.triet12369.heartratemonitor;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -10,19 +12,28 @@ import android.os.Message;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.Array;
 import java.sql.BatchUpdateException;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -32,17 +43,17 @@ import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
-import static com.triet12369.heartratemonitor.R.id.graph;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.Math.toIntExact;
+
+
 
 
 public class MonitorFragment extends Fragment implements View.OnClickListener{
+    private static final String TAG = "MonitorFragment";
 
     TextView testValue, textHeartValue, ecgStatus;
-    Button buttonPause, buttonConnect;
+    Button buttonPause, buttonConnect, buttonAppend;
     Handler bluetoothIn;
+    CheckBox checkBox;
     private BluetoothDevice device;
     final int handlerState = 0;
     private BluetoothSocket btSocket = null;
@@ -54,19 +65,24 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
     int Cpause=0;
 
     private final Handler mHandler = new Handler();
-    private LineGraphSeries mSeries;
+    private LineGraphSeries mSeries, mSeries2;
     private double graph2LastXValue = 5d;
 
     private LinkedList Data = new LinkedList();
+    private LinkedList smoothBuffer = new LinkedList();
     int DATA_SIZE = 1000;
     int VIEW_WINDOW = 250;
     int handlerControl = 0;
 
     private int heartVal;
-    private int fs = 120;
+    private double fs = 105;
     double Rthreshold=500;
-    private int maxY = 1000;
-    private int minY = 0;
+    private int maxY = 500;
+    private int minY = -200;
+    private boolean showThreshold = false;
+    private int output;
+    long timeTemp = 0, timeDiff;
+    int count = 0;
 
 
     @Nullable
@@ -79,7 +95,9 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
 
         GraphView graph = (GraphView) rootView.findViewById(R.id.graph);
         mSeries = new LineGraphSeries<>();
+        mSeries2 = new LineGraphSeries<>();
         graph.addSeries(mSeries);
+        graph.addSeries(mSeries2);
         graph.getViewport().setXAxisBoundsManual(true);
         graph.getViewport().setYAxisBoundsManual(true);
         graph.getViewport().setMinX(0);
@@ -108,12 +126,16 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
         buttonPause.setOnClickListener(this);
         buttonConnect = (Button) getView().findViewById(R.id.buttonConnect);
         buttonConnect.setOnClickListener(this);
+        buttonAppend = (Button) getView().findViewById(R.id.buttonAppend);
+        buttonAppend.setOnClickListener(this);
+        checkBox = (CheckBox) getActivity().findViewById(R.id.checkThreshold);
+        checkBox.setOnClickListener(this);
         Data.clear();
+
 
         bluetoothIn = new Handler() {
             public void handleMessage(Message msg) {
                 StringBuilder temp = new StringBuilder();
-
                 int check = 0;
                 if (msg.what == handlerControl) {
                     String readMessage = (String) msg.obj;
@@ -128,13 +150,26 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                                     check = 0;
                                     ecgStatus.setText(R.string.leads_off);
                                     graph2LastXValue += 1d;
-                                    mSeries.appendData(new DataPoint(graph2LastXValue, 500), true, VIEW_WINDOW + 1);
+                                    mSeries.appendData(new DataPoint(graph2LastXValue, 500), true, VIEW_WINDOW);
                                 } else {
                                     check = 0;
                                     ecgStatus.setText(R.string.status_connected);
                                     //testValue.setText(""+readMessage);
                                     graph2LastXValue += 1d;
-                                    mSeries.appendData(new DataPoint(graph2LastXValue, Integer.parseInt(temp.toString())), true, VIEW_WINDOW + 1);
+                                    mSeries.appendData(new DataPoint(graph2LastXValue, Integer.parseInt(temp.toString())), true, VIEW_WINDOW);
+                                    if (showThreshold) {
+                                        mSeries2.appendData(new DataPoint(graph2LastXValue - 1,  (int) Rthreshold), true, VIEW_WINDOW);
+                                    }
+
+                                    count++;
+                                    if (count >= Data.size()/2) {
+                                        timeDiff = (System.nanoTime() - timeTemp);
+                                        timeTemp = System.nanoTime();
+                                        double f = (double)timeDiff/1000000000.0;
+                                        count = 0;
+                                        fs = (Data.size()/2.0)/f;
+                                    }
+
                                     if (Data.size() < DATA_SIZE) {
                                         Data.add(Integer.parseInt(temp.toString()));
                                     } else {
@@ -158,23 +193,46 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                int[] BufferData = new int[Data.size()];
-                for (int i = 0; i < Data.size(); i++) {
-                    BufferData[i] = (Integer) Data.get(i);
+                int[] BufferData = new int[Data.size()/4];
+                int[] heartValArray = new int[smoothBuffer.size()];
+                for (int i = 0; i < Data.size()/4; i++) {
+                    BufferData[i] = (Integer) Data.get(i+(Data.size()*3/4));
                 }
 
                 heartVal = (int)(60/RRCal(BufferData));
 
+                for (int i = 0; i < smoothBuffer.size(); i++) {
+                    heartValArray[i] = (Integer) smoothBuffer.get(i);
+                }
+                //Log.d(TAG, "debug: " + Arrays.toString(heartValArray));
+
+                if (heartVal > 20 && heartVal < 200) {
+                    if (smoothBuffer.size() < 5) {
+                        smoothBuffer.add(heartVal);
+                    } else {
+                        smoothBuffer.removeFirst();
+                        smoothBuffer.add(heartVal);
+                    }
+                }
+                output = meanInt(heartValArray);
+
                 if (BufferData.length > 0) {
-                    textHeartValue.setText(""+heartVal);
+                    textHeartValue.setText(getString(R.string.placeholder_int, output));
+                    if (output > 60 && output < 90) {
+                        textHeartValue.setTextColor(getResources().getColorStateList(R.color.darkGreen));
+                    } else {
+                        textHeartValue.setTextColor(getResources().getColorStateList(R.color.darkYellow));
+                    }
+
                     maxY = maxInt(BufferData);
                     minY = minInt(BufferData);
                     GraphView graph = (GraphView) getView().findViewById(R.id.graph);
-                    graph.getViewport().setMinY(minY-200);
-                    graph.getViewport().setMaxY(maxY+200);
+                    graph.getViewport().setMinY(minY-100);
+                    graph.getViewport().setMaxY(maxY+100);
                     Rthreshold = maxY - (maxY-minY)/3;
+
                 }
-                mHandler.postDelayed(this, 2000);
+                mHandler.postDelayed(this, 1000);
             }
         }, 0);
 
@@ -211,8 +269,8 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                     }
                     LineGraphSeries<DataPoint> series = new LineGraphSeries<>(bufferData);
                     GraphView graph = (GraphView) getView().findViewById(R.id.graph);
-                    graph.getViewport().setMinY(minY-200);
-                    graph.getViewport().setMaxY(maxY+200);
+                    graph.getViewport().setMinY(minY-100);
+                    graph.getViewport().setMaxY(maxY+100);
                     graph.getViewport().setMinX(Data.size() - VIEW_WINDOW);
                     graph.getViewport().setMaxX(Data.size());
                     graph.getViewport().setYAxisBoundsManual(true);
@@ -221,6 +279,7 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                     //graph.getViewport().setScalableY(true);
                     graph.removeAllSeries();
                     graph.addSeries(series);
+                    buttonPause.setText("Unpause");
 
                 } else {
                     handlerControl = 0;
@@ -233,11 +292,11 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                     graph.getGridLabelRenderer().setHighlightZeroLines(false);
                     graph.getGridLabelRenderer().setHorizontalLabelsVisible(false);
                     graph.getGridLabelRenderer().setVerticalLabelsVisible(false);
-                    graph.getViewport().setMinY(minY-200);
-                    graph.getViewport().setMaxY(maxY+200);
+                    graph.getViewport().setMinY(minY-100);
+                    graph.getViewport().setMaxY(maxY+100);
                     graph.getViewport().setXAxisBoundsManual(true);
                     graph.getViewport().setYAxisBoundsManual(true);
-
+                    buttonPause.setText("Pause");
                 }
                 break;
             case R.id.buttonConnect:
@@ -291,7 +350,34 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                             }
                         }
                     }).start();
-
+                break;
+            case R.id.checkThreshold:
+                if (checkBox.isChecked()) {
+                    showThreshold = true;
+                    Log.d(TAG, "debug: " + showThreshold);
+                    checkBox.setChecked(true);
+                } else {
+                    showThreshold = false;
+                    Log.d(TAG, "debug: " + showThreshold);
+                    checkBox.setChecked(false);
+                }
+                break;
+            case R.id.buttonAppend:
+                Calendar calendar = Calendar.getInstance();
+                Date d = calendar.getTime();
+                String data = output + "," + d + ";" + "\n";
+                String filename = "history_log";
+                FileOutputStream outputStream;
+                try {
+                    outputStream = getContext().openFileOutput(filename, Context.MODE_APPEND);
+                    outputStream.write(data.getBytes());
+                    Toast.makeText(getActivity(), "Added to history", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "Append: " + data);
+                    outputStream.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                Log.d(TAG, "Read: " + readFromFile(filename, getContext()));
                 break;
         }
     }
@@ -382,35 +468,77 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
         for (int j=0;j<countP;j++){
             peaklocs[j]=peaklocsTemp[j];
         }
+
         return peaklocs;
     }
 
     //calculate the mean of heart rate
-    private double RRCal (int[] data){
-        int[] peak=findpeaksloc(data);
+    private double RRCal (int[] data) {
+        int[] peak = findpeaksloc(data);
 //        int count=0;
-        int sumdiff=0;
-        double[] RR=new double[peak.length];
-        for (int i=1;i<peak.length;i++){
-            int diff=peak[i]-peak[i-1];
-            RR[i]=(double)diff/fs;
+        int sumdiff = 0;
+        double RRVal = 0;
+        if (peak.length > 1) {
+            double[] RR = new double[peak.length - 1];
+            for (int i = 1; i < peak.length; i++) {
+                int diff = peak[i] - peak[i - 1];
+                RR[i - 1] = (double) diff / fs;
 //            sumdiff=sumdiff+RR;
 //            count=count+1;
+            }
+            //Log.d(TAG, "debug: " + Arrays.toString(RR));
+            RRVal = meanDouble(RR);
         }
         //RR=sumdiff/count;
-        double RRVal=meanDouble(RR);
         return RRVal;
+
     }
     private double meanDouble(double[] data){
         double sum=0;
-        double meanV=0;
+        double meanV;
         for (int i=0;i<data.length;i++){
             sum=sum+data[i];
         }
-        meanV=sum/data.length;
+        meanV=sum/(data.length - 0.0);
+        //Log.d(TAG, "debug: " + meanV);
+
         return meanV;
     }
+    private int meanInt (int[] data) {
+        int sum = 0;
+        for (int d : data) sum += d;
+        return (int)(1.0d * sum/data.length);
+    }
 
+    private String readFromFile(String filename, Context context) {
+
+        String ret = "";
+
+        try {
+            InputStream inputStream = context.openFileInput(filename);
+
+            if ( inputStream != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    stringBuilder.append(receiveString).append("\n");
+                }
+
+                inputStream.close();
+                ret = stringBuilder.toString();
+            }
+        }
+        catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
+        }
+
+        return ret;
+    }
 }
 
 

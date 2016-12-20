@@ -221,8 +221,9 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
         getActivity().setTitle("Bluetooth Devices");
         btnONOFF = (ToggleButton) getView().findViewById(R.id.toggleButton);
         btnONOFF.setOnCheckedChangeListener(this);
+        /*
         btnDA = (Button) getView().findViewById(R.id.buttonDiscoverAbility);
-        btnDA.setOnClickListener(this);
+        btnDA.setOnClickListener(this);*/
         btnD = (Button) getView().findViewById(R.id.buttonDiscover);
         btnD.setOnClickListener(this);
         lvNewDevices = (ListView) getView().findViewById(R.id.lvNewDevices);
@@ -303,6 +304,7 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
     }
     public void onClick(View view) {
         switch (view.getId()) {
+            /*
             case R.id.buttonDiscoverAbility:
                 Log.d(TAG, "btnDA: Making device discoverable for 300 seconds.");
 
@@ -312,7 +314,7 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
 
                 IntentFilter intentFilter = new IntentFilter(mBluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
                 getActivity().registerReceiver(mBroadcastReceiver2, intentFilter);
-                break;
+                break; */
             case R.id.buttonDiscover:
                 Log.d(TAG, "btnD: Looking for unpaired devices.");
                 mBTDevices.clear();
