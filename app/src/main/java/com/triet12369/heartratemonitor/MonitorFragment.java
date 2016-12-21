@@ -4,12 +4,9 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
-import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -21,6 +18,11 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GridLabelRenderer;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -28,9 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.lang.reflect.Array;
-import java.sql.BatchUpdateException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -38,13 +37,6 @@ import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.GridLabelRenderer;
-import com.jjoe64.graphview.series.DataPoint;
-import com.jjoe64.graphview.series.LineGraphSeries;
 
 
 
@@ -203,7 +195,8 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
                     BufferData[i] = (Integer) Data.get(i+(Data.size()*3/4));
                 }
 
-                heartVal = (int)(60/RRCal(BufferData));
+//                heartVal = (int)(60/RRCal(BufferData));
+                heartVal=(int)(60*fs/pan_tompkin(BufferData));
 
                 for (int i = 0; i < smoothBuffer.size(); i++) {
                     heartValArray[i] = (Integer) smoothBuffer.get(i);
@@ -542,7 +535,427 @@ public class MonitorFragment extends Fragment implements View.OnClickListener{
         for (int d : data) sum += d;
         return (int)(1.0d * sum/data.length);
     }
+    private int[] conv(int[]u,int[] v){
+        int m=u.length;
+        int n=v.length;
+        int wl=m+n-1;
+        int[] w= new int[wl];
+        for (int k=1;k<wl;k++){
+            int sum=0;
+            int minj=Math.max(1,k+1-n);
+            int maxj=Math.min(k,m);
+            for (int j=minj;j<=maxj;j++){
+                int temp=u[j-1]*v[k-j+1-1];
+                sum=sum+temp;
+            }
+            w[k-1]=sum;
+        }
+        return w;
+    }
+    private double[] conv3(int[]u,double[] v){
+        int m=u.length;
+        int n=v.length;
+        int wl=m+n-1;
+        double[] w= new double[wl];
+        for (int k=1;k<wl;k++){
+            double sum=0;
+            int minj=Math.max(1,k+1-n);
+            int maxj=Math.min(k,m);
+            for (int j=minj;j<=maxj;j++){
+                double temp=(double) u[j-1]*v[k-j+1-1];
+                sum=sum+temp;
+            }
+            w[k-1]=sum;
+        }
+        return w;
+    }
+    private double[] conv3(double[]u,double[] v){
+        int m=u.length;
+        int n=v.length;
+        int wl=m+n-1;
+        double[] w= new double[wl];
+        for (int k=1;k<wl;k++){
+            double sum=0;
+            int minj=Math.max(1,k+1-n);
+            int maxj=Math.min(k,m);
+            for (int j=minj;j<=maxj;j++){
+                double temp=(double) u[j-1]*v[k-j+1-1];
+                sum=sum+temp;
+            }
+            w[k-1]=sum;
+        }
+        return w;
+    }
+    private double maxDouble(double[] data) {
+        double maxV=0;
+        for (int i=0; i<data.length; i++){
+            if (data[i]>=maxV){
+                maxV=data[i];
+            }
+        }
+        return maxV;
+    }
+    private double imaxDouble(double[] data) {
+        double maxi=0;
+        double maxV=0;
+        for (int i=0; i<data.length; i++){
+            if (data[i]>maxV){
+                maxV=data[i];
+                maxi=(double) i;
+            }
+        }
+        return maxi;
+    }
+    private int[] diffInt (int[] data){
+        int[] d= new int[data.length-1];
+        for (int i=1;i<data.length;i++){
+            d[i-1]=data[i]-data[i-1];
+        }
+        return d;
+    }
+    private double[] diffDouble (double[] data){
+        double[] d= new double[data.length-1];
+        for (int i=1;i<data.length;i++){
+            d[i-1]=data[i]-data[i-1];
+        }
+        return d;
+    }
+    private int[] absIntInt (int[] array){
+        int[] absA=new int[array.length];
+        for (int i=0;i<absA.length;i++){
+            if (array[i]>=0){absA[i]=array[i];}
+            else {absA[i]=(-1)*array[i];}
+        }
+        return absA;
+    }
+    private double[] absDInt (double[] array){
+        double[] absA=new double[array.length];
+        for (int i=0;i<absA.length;i++){
+            if (array[i]>=0){absA[i]=array[i];}
+            else {absA[i]=(-1)*array[i];}
+        }
+        return absA;
+    }
+    private int round(double x){
+        int r=0;
+        if ((x-(int)x)>=0.5){
+            r=(int)x+1;
+        }
+        else {
+            r=(int)x;
+        }
+        return r;
+    }
 
+    //ones
+    private int[] ones(int column){
+        int[] array=new int[column];
+        for (int i=0;i<column;i++){
+            array[i]=1;
+        }
+        return array;
+    }
+    private int[] find (int[] data,int value){
+        int[] f=new int[0];
+        for (int i=0;i<data.length;i++){
+            if (data[i]==value){
+                f=Arrays.copyOf(f,f.length+1);
+                f[f.length-1]=i;
+            }
+        }
+        return f;
+    }
+    //sign function
+    private int[] sign(double[] data){
+        int[] s=new int[data.length];
+        for (int i=0;i<s.length;i++){
+            if (data[i]>0){s[i]=1;}
+            else if (data[i]<0){s[i]=-1;}
+            else {s[i]=0;}
+        }
+        return s;
+    }
+    //find location of peaks of an array with defined threshold
+    private int[] findpeaksLoc(double[] data,int MPD){
+        int[] trend=sign(diffDouble(data));
+        int[] idx=find(trend,0);
+        int[] locs=new int[1];
+        for (int i=idx.length-1;i>=0;i--){
+            if (trend[Math.min(idx[i]+1,trend.length-1)]>=0){
+                trend[idx[i]]=1;
+            }
+            else {
+                trend[idx[i]]=-1;
+            }
+        }
+        int[] idxp=find(diffInt(trend),-2);
+        for (int i=0;i<idxp.length-1;i++){
+            idxp[i]+=1;
+            if (i==0){
+                locs[i]=idxp[i];
+            }
+        }
+        int j=0;
+        for (int i=1;i<idxp.length;i++){
+            if ((idxp[i]-idxp[j])>MPD){
+                locs=Arrays.copyOf(locs,locs.length+1);
+                locs[locs.length-1]=idxp[i];
+                j=i;
+            }
+        }
+        return idxp;
+    }
+
+    private double[] findpeakVal(double[] data,int MPD){
+        int[] locs=findpeaksLoc(data,MPD);
+        double[] pks=new double[locs.length];
+        for (int i=0;i<pks.length;i++){
+            pks[i]=data[locs[i]];
+        }
+        return pks;
+    }
+    private double pan_tompkin (int[] ecg){
+        double[] ecg_h=new double[ecg.length];
+        int delay=0;
+        for (int i=0;i<ecg_h.length;i++){
+            ecg_h[i]=(double)ecg[i]/(double) maxInt(ecg);
+        }
+        //derivative filter
+        double[] h_d={-1, -2, 0, 2, 1};
+
+        for(int i=0;i<h_d.length;i++){
+            h_d[i]=h_d[i]/8.0;
+        }
+
+        double[] ecg_d_temp=conv3(ecg_h,h_d);
+        double max_ecg_d_temp=maxDouble(ecg_d_temp);
+        double[] ecg_d=new double[ecg_d_temp.length];
+        for (int i=0;i<ecg_h.length;i++){
+            ecg_d[i]=ecg_d_temp[i]/max_ecg_d_temp;//derivative data
+        }
+        delay=delay+2;
+
+        //squaring
+        double[] ecg_s=new double[ecg_d.length];
+        for (int i=0;i<ecg_s.length;i++){
+            ecg_s[i]=ecg_d[i]*ecg_d[i];
+        }
+
+        //moving average
+        int[] h_m_temp=ones(round(0.15*fs));
+        double[] h_m=new double[h_m_temp.length];
+        for (int i=0;i<h_m.length;i++){
+            h_m[i]=(double)h_m_temp[i]/(double)round(0.15*fs);
+        }
+        double[] ecg_m=conv3(ecg_s,h_m);//moving avg data
+        delay=delay+15;
+
+        //Fiducial Mark
+        int[] locs=findpeaksLoc(ecg_m,round(0.2*fs));
+        double[] pks=findpeakVal(ecg_m,round(0.2*fs));
+
+        //initialize the training phase (2 seconds of the signal) to determine the THR_SIG and THR_NOISE
+        double THR_SIG=maxDouble(Arrays.copyOfRange(ecg_m,1-1,round(2*fs-1)))/3.0;
+        double THR_NOISE=meanDouble(Arrays.copyOfRange(ecg_m,1-1,round(2*fs-1)))/2.0;
+        double SIG_LEV = THR_SIG;
+        double NOISE_LEV = THR_NOISE;
+
+        //Initialize bandpath filter threshold(2 seconds of the bandpass signal)
+        double THR_SIG1=maxDouble(Arrays.copyOfRange(ecg_h,1-1,round(2*fs-1)))/3.0;
+        double THR_NOISE1=meanDouble(Arrays.copyOfRange(ecg_h,1-1,round(2*fs-1)))/2.0;
+        double SIG_LEV1 = THR_SIG1;
+        double NOISE_LEV1 = THR_NOISE1;
+        double y_i=0;
+        double x_i=0;
+
+        //Initialize
+        double[] qrs_c=new double[0];
+        int[] qrs_i=new int[0];
+        double mean_RR=0;
+        double m_selected_RR=0;
+        double test_m=0;
+        double[] qrs_i_raw=new double[0];
+        double[] qrs_amp_raw=new double[0];
+        double[] nois_c=new double[0];
+        double[] nois_i=new double[0];
+        int skip=0;
+        int not_nois=0;
+        int ser_back=0;
+        double[] SIGL_buf=new double[0];
+        double[] NOISL_buf=new double[0];
+        double[] THRL_buf=new double[0];
+        double[] SIGL_buf1=new double[0];
+        double[] NOISL_buf1=new double[0];
+        double[] THRL_buf1=new double[0];
+        double a=0;
+        //Thresholding and online desicion rule
+        for (int i=0;i<pks.length;i++){
+
+            //locate the corresponding peak in the filtered signal
+            if ((locs[i]-round(0.150*fs)>=1)&&(locs[i]<=ecg_h.length)){
+                y_i=maxDouble(Arrays.copyOfRange(ecg_h,locs[i]-round(0.150*fs),locs[i]));
+                x_i=imaxDouble(Arrays.copyOfRange(ecg_h,locs[i]-round(0.150*fs),locs[i]));
+            }
+            else if (i==0){
+                y_i=maxDouble(Arrays.copyOfRange(ecg_h,0,locs[i]));
+                x_i=imaxDouble(Arrays.copyOfRange(ecg_h,0,locs[i]));
+            }
+            else if (locs[i]>=ecg_h.length-1){
+                y_i=maxDouble(Arrays.copyOfRange(ecg_h,locs[i]-round(0.150*fs),ecg_h.length-1));
+                x_i=imaxDouble(Arrays.copyOfRange(ecg_h,locs[i]-round(0.150*fs),ecg_h.length-1));
+            }
+
+            //update the heart_rate (Two heart rate means one the most recent and the other selected)
+            if (qrs_c.length>=9){
+                int[] diffRR=diffInt(Arrays.copyOfRange(qrs_i,qrs_i.length-8-1,qrs_i.length-1));
+                mean_RR=(double) meanInt(diffRR);
+                int comp=qrs_i[qrs_i.length-1]-qrs_i[qrs_i.length-1-1];
+                if ((comp<=0.92*mean_RR)||(comp>=1.16*mean_RR)){
+                    //lower down thresholds to detect better in MVI
+                    THR_SIG=0.5*THR_SIG;
+                    //lower down thresholds to detect better in Bandpass filtered
+                    THR_SIG1 = 0.5*THR_SIG1;
+                }
+                else {
+                    m_selected_RR=mean_RR;
+                }
+            }
+
+            //calculate the mean of the last 8 R waves to make sure that QRS is not missing
+            //(If no R detected , trigger a search back) 1.66*mean
+            if (m_selected_RR!=0){
+                test_m=m_selected_RR;
+            }
+            else if ((mean_RR!=0)&&(m_selected_RR==0)){
+                test_m=mean_RR;
+            }
+            else {
+                test_m=0;
+            }
+            if (test_m!=0){
+                if ((locs[i]-qrs_i[qrs_i.length-1])>=round(1.66*test_m)){
+                    double pks_temp=maxDouble(Arrays.copyOfRange(ecg_m,qrs_i[qrs_i.length-1]+round(0.200*fs),locs[i]-round(0.200*fs)));
+                    double locs_temp=imaxDouble(Arrays.copyOfRange(ecg_m,qrs_i[qrs_i.length-1]+round(0.200*fs),locs[i]-round(0.200*fs)));
+                    locs_temp=qrs_i[qrs_i.length-1]+round(0.200*fs)+locs_temp-1-1;
+                    if (pks_temp>THR_NOISE){
+                        qrs_c=Arrays.copyOf(qrs_c,qrs_c.length+1);
+                        qrs_c[qrs_c.length-1]=pks_temp;
+                        double y_i_t;
+                        double x_i_t;
+                        if (locs_temp<=ecg_h.length-1){
+                            y_i_t=maxDouble(Arrays.copyOfRange(ecg_h,(int)(locs_temp-round(0.150*fs)),(int)locs_temp));
+                            x_i_t=imaxDouble(Arrays.copyOfRange(ecg_h,(int)(locs_temp-round(0.150*fs)),(int)locs_temp));
+                        }
+                        else{
+                            y_i_t=maxDouble(Arrays.copyOfRange(ecg_h,(int)(locs_temp-round(0.150*fs)),ecg_h.length-1));
+                            x_i_t=imaxDouble(Arrays.copyOfRange(ecg_h,(int)(locs_temp-round(0.150*fs)),ecg_h.length-1));
+                        }
+                        if (y_i_t>THR_NOISE1){
+                            SIG_LEV1=0.25*y_i_t+0.75*SIG_LEV1;
+                            qrs_i_raw=Arrays.copyOf(qrs_i_raw,qrs_i_raw.length+1);
+                            qrs_i_raw[qrs_i_raw.length-1]=locs_temp-round(0.15*fs)+(x_i_t-1);
+                            qrs_amp_raw=Arrays.copyOf(qrs_amp_raw,qrs_amp_raw.length+1);
+                            qrs_amp_raw[qrs_amp_raw.length-1]=y_i_t;
+
+                        }
+                        not_nois=1;
+                        SIG_LEV=0.25*pks_temp+0.75*SIG_LEV;
+                    }
+                    else {not_nois=0;}
+                }
+            }
+
+            //find noise and QRS peaks
+            if (pks[i]>=THR_SIG){
+                //if a QRS candidate occurs within 360ms of the previous QRS
+                //the algorithm determines if its T wave or QRS
+                if (qrs_c.length>=3){
+                    if ((locs[i]-qrs_i[qrs_i.length-1])<=(round(0.3600*fs))){
+                        double Slope1 =meanDouble(diffDouble(Arrays.copyOfRange(ecg_m,locs[i]-round(0.075*fs),locs[i])));
+                        double Slope2 =meanDouble(diffDouble(Arrays.copyOfRange(ecg_m,qrs_i[qrs_i.length-1]-round(0.075*fs),qrs_i[qrs_i.length-1])));
+                        if (Math.abs(Slope1)<=Math.abs(Slope2)){
+                            nois_c=Arrays.copyOf(nois_c,nois_c.length+1);
+                            nois_c[nois_c.length-1]=pks[i];
+                            nois_i=Arrays.copyOf(nois_i,nois_i.length+1);
+                            nois_i[nois_i.length-1]=locs[i];
+                            skip=1;
+                            NOISE_LEV1=0.125*y_i + 0.875*NOISE_LEV1;
+                            NOISE_LEV = 0.125*pks[i] + 0.875*NOISE_LEV;
+                        }
+                        else {skip=0;}
+                    }
+                }
+                if (skip==0){
+                    qrs_c=Arrays.copyOf(qrs_c,qrs_c.length+1);
+                    qrs_c[qrs_c.length-1]=pks[i];
+                    qrs_i=Arrays.copyOf(qrs_i,qrs_i.length+1);
+                    qrs_i[qrs_i.length-1]=locs[i];
+                    if (y_i>=THR_SIG1){
+                        if (ser_back!=0){
+                            qrs_i_raw=Arrays.copyOf(qrs_i_raw,qrs_i_raw.length+1);
+                            qrs_i_raw[qrs_i_raw.length-1]=x_i;
+
+                        }
+                        else {
+                            qrs_i_raw=Arrays.copyOf(qrs_i_raw,qrs_i_raw.length+1);
+                            qrs_i_raw[qrs_i_raw.length-1]=locs[i]-round(0.150*fs)+(x_i-1);
+
+                        }
+                        qrs_amp_raw=Arrays.copyOf(qrs_amp_raw,qrs_amp_raw.length+1);
+                        qrs_amp_raw[qrs_amp_raw.length-1]=y_i;
+                        SIG_LEV1 = 0.125*y_i + 0.875*SIG_LEV1;
+                    }
+                    SIG_LEV = 0.125*pks[i] + 0.875*SIG_LEV ;
+                    if (qrs_i_raw.length>=3){
+                        a=meanDouble(diffDouble(Arrays.copyOfRange(qrs_i_raw,qrs_i_raw.length-3,qrs_i_raw.length-1)));
+                    }
+                    else {a=80;}
+
+                }
+            }
+            else if ((THR_NOISE <= pks[i]) && (pks[i]<THR_SIG)){
+                NOISE_LEV1 = 0.125*y_i + 0.875*NOISE_LEV1;
+                NOISE_LEV = 0.125*pks[i] + 0.875*NOISE_LEV;
+            }
+            else if (pks[i] < THR_NOISE){
+                nois_c=Arrays.copyOf(nois_c,nois_c.length+1);
+                nois_c[nois_c.length-1]=pks[i];
+                nois_i=Arrays.copyOf(nois_i,nois_i.length+1);
+                nois_i[nois_i.length-1]=locs[i];
+                NOISE_LEV1 = 0.125*y_i + 0.875*NOISE_LEV1;
+                NOISE_LEV = 0.125*pks[i] + 0.875*NOISE_LEV;
+            }
+
+            // adjust the threshold with SNR
+            if ((NOISE_LEV!=0)||(SIG_LEV!=0)){
+                THR_SIG=NOISE_LEV+0.25*(Math.abs(SIG_LEV-NOISE_LEV));
+                THR_NOISE = 0.5*(THR_SIG);
+            }
+            if ((NOISE_LEV1!=0)||(SIG_LEV1!=0)){
+                THR_SIG1=NOISE_LEV1 + 0.25*(Math.abs(SIG_LEV1 - NOISE_LEV1));
+                THR_NOISE1 = 0.5*(THR_SIG1);
+            }
+            SIGL_buf=Arrays.copyOf(SIGL_buf,SIGL_buf.length+1);
+            SIGL_buf[SIGL_buf.length-1]=SIG_LEV;
+            NOISL_buf=Arrays.copyOf(NOISL_buf,NOISL_buf.length+1);
+            NOISL_buf[NOISL_buf.length-1]=NOISE_LEV;
+            THRL_buf=Arrays.copyOf(THRL_buf,THRL_buf.length+1);
+            THRL_buf[THRL_buf.length-1]=THR_SIG;
+
+            SIGL_buf1=Arrays.copyOf(SIGL_buf1,SIGL_buf1.length+1);
+            SIGL_buf1[SIGL_buf1.length-1]=SIG_LEV1;
+            NOISL_buf1=Arrays.copyOf(NOISL_buf1,NOISL_buf1.length+1);
+            NOISL_buf1[NOISL_buf1.length-1]=NOISE_LEV1;
+            THRL_buf1=Arrays.copyOf(THRL_buf1,THRL_buf1.length+1);
+            THRL_buf1[THRL_buf1.length-1]=THR_SIG1;
+
+            skip = 0; //reset parameters
+            not_nois = 0; //reset parameters
+            ser_back = 0;  //reset bandpass param
+        }
+
+        return a;
+    }
     private String readFromFile(String filename, Context context) {
 
         String ret = "";
