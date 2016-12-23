@@ -6,6 +6,9 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+        <item name="android:listSeparatorTextViewStyle">@style/AppTheme.ListSeparatorTextView</item>
+
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -27,6 +30,8 @@
         <item name="android:textSize">20sp</item>
         <item name="android:textColor">#000</item>
     </style>
+
+
 
 
 

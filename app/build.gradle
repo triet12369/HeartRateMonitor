@@ -28,6 +28,8 @@ dependencies {
     compile 'com.android.support:design:24.2.1'
     compile 'com.android.support:support-v4:24.2.1'
     compile 'com.jjoe64:graphview:4.2.1'
+    compile 'com.takisoft.fix:preference-v7:25.0.1.0'
+
 
     testCompile 'junit:junit:4.12'
 }

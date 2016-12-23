@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+        <ListPreference
+            android:key="list_preference"
+            android:title="@string/title_list_preference"
+            android:dialogTitle="@string/dialog_title_list_preference"
+            android:entries="@array/entries_list_preference"
+            android:entryValues="@array/entryvalues_list_preference"
+            android:defaultValue="Thresholding"/>
+
+        <EditTextPreference
+
+            android:defaultValue="10"
+            android:selectAllOnFocus="true"
+            android:singleLine="false"
+            android:title="History update interval (seconds)"
+            android:key="edit_text_preference_1"
+            />
+
+
+</android.support.v7.preference.PreferenceScreen>

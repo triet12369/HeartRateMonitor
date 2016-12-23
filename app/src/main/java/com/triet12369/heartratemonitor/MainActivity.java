@@ -8,6 +8,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ShareCompat;
+import android.support.v7.preference.PreferenceManager;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -50,6 +51,7 @@ public class MainActivity extends AppCompatActivity
 
         //default menu selection
         displaySelectedScreen(R.id.nav_bluetooth);
+        PreferenceManager.setDefaultValues(this, R.xml.preference, false);
     }
 
     @Override

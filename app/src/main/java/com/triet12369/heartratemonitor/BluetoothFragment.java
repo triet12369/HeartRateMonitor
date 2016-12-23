@@ -56,12 +56,14 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
 
                 switch (state) {
                     case BluetoothAdapter.STATE_OFF:
+                        btnONOFF.setChecked(false);
                         Log.d(TAG, "onReceive: STATE OFF");
                         break;
                     case BluetoothAdapter.STATE_TURNING_OFF:
                         Log.d(TAG, "mBroadcastReceiver1: STATE TURNING OFF");
                         break;
                     case BluetoothAdapter.STATE_ON:
+                        btnONOFF.setChecked(true);
                         Log.d(TAG, "mBroadcastReceiver1: STATE ON");
                         break;
                     case BluetoothAdapter.STATE_TURNING_ON:
@@ -235,6 +237,8 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
         getActivity().registerReceiver(mBroadcastReceiver4, filter);
 
+
+
         lvNewDevices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -269,6 +273,16 @@ public class BluetoothFragment extends Fragment implements CompoundButton.OnChec
             }
         });
             }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mBluetoothAdapter.isEnabled()) {
+            btnONOFF.setChecked(true);
+        } else {
+            btnONOFF.setChecked(false);
+        }
+    }
 
     public void enableBT() {
         if (mBluetoothAdapter == null) {
